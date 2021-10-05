@@ -1,0 +1,904 @@
+---
+title: "ANALYSIS OF THE TCGA-PANCANCER DATASET"
+output:
+  html_document: default
+  pdf_document:
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#R version 3.6.1 (2019-07-05) -- "Action of the Toes"
+#Copyright (C) 2019 The R Foundation for Statistical Computing
+#Platform: x86_64-w64-mingw32/x64 (64-bit)
+
+
+
+# PART 0: PREPARE THE ENVIRONMENT --------------------------------
+
+#1. Load (or install) all necessary packages.
+```{r message = FALSE, warning = FALSE}
+library("readxl")
+library("writexl")
+library("readr")
+library("ComplexHeatmap")
+library("circlize")
+library("ggplot2")
+library("gridExtra")
+library("gplots")
+library("mclust")
+library("GSEABase")
+library("methods")
+library("edgeR")
+library("geneplotter")
+library("genefilter")
+library("BiocGenerics")
+library("Biobase")
+library("graph")
+library("XML")
+library("lattice")
+library("limma")
+library("shinythemes")
+library("shiny")
+library("RColorBrewer")
+library("parallel")
+library("cluster")
+library("Matrix")
+library("locfit")
+library("snow")
+library("GSVA") 
+library("dplyr")
+library("ggplot2")
+library("data.table")
+library ("remotes")
+library("plyr")
+library("magrittr")
+library("OIsurv")
+library("survival")
+library("KMsurv")
+library("splines")
+library("survminer")
+library("ggpubr")
+library("survutils")
+library("scales")
+library("ggpubr")
+library("tidyverse")
+library("corrr")
+library("igraph")
+library("ggraph")
+library("tidygraph")
+library("CoxBoost")
+library("glmnet") 
+library("randomForest") 
+library("class") 
+library("dml") 
+library("MASS")
+library("readr")
+library("Rtsne") 
+library("stats") 
+library("ggridges")
+library("gdata")
+library("ggrepel")
+library("corrplot")
+library("ggExtra")
+library("gridExtra")
+library("rstatix")   
+library("ggpubr")
+library("viridis")
+library("corrplot")
+library("xlsx")
+library("plotly")
+library("plot3D")
+library("tidyr")
+```
+
+
+# PART 1: DATA IMPORTATION -----------------------------------------
+
+#1. Import the TGFB and ALTEJ genelists. 
+```{r message = FALSE, warning = FALSE}
+TGFBgeneset <- read.table("Input/TGFB_list.txt", quote="\"", comment.char="", stringsAsFactors=FALSE)
+ALTEJgeneset <- read.table("Input/ALTEJ_list.txt", quote="\"", comment.char="", stringsAsFactors=FALSE)
+TGFBlist <- as.list(TGFBgeneset[,1:1]) #55 genes (50 + synonyms)
+ALTEJlist <- as.list(ALTEJgeneset[,1:1]) #45 genes (36 + synonyms)
+Bothgenelists <- list(TGFBUPgeneset=TGFBlist, ALTEJgeneset=ALTEJlist)
+```
+
+#2. Import the file with normalized gene expression.
+```{r message = FALSE, warning = FALSE, results='hide'}
+Exp = fread("Input/ZscoresofLogTMMvaluesofallgenes.txt", data.table=FALSE)
+Exp[1:10,1:100]  
+class(Exp) #[1] "data.frame"
+rownames(Exp) <- Exp$V1
+Exp$V1 <- NULL
+dim(Exp) #9.572 samples x 16.335 genes. There are 4 genes missing from the TGFB signature: LAMC2, FAP, CCL20, CHRNA9.
+class(Exp$A1BG) #numeric
+##This file contatins normalized gene expression of the TCGA-pancancer primary solid tumor samples. 
+##Normalization (as described in Methods): TMM normalization -> Log2 transformation -> gene-centered Z-score transformation. 
+##The original unnormalized file was downloaded by Mao from the GDC portal (https://gdc.cancer.gov/about-data/publications/pancanatlas).
+```
+
+#3. Import the file with the clinical information.
+```{r message = FALSE, warning = FALSE}
+Clin <- read.delim("Input/Clinicalinfoprimarytumorsunduplicated.txt") #11.248 patients.
+##This file contatins clinical information from TCGA-pancancer patients with primary solid tumors. 
+##It was sent by a collaborator (Mao), who generated it from the file "TCGA-CDR-SupplementalTableS1.xlsx" from the GDC portal.
+```
+
+#4. Import the files with genes' weights. 
+```{r message = FALSE, warning = FALSE}
+TGFBimportance <- read_excel("Input/Relative importance of BAlt genes.xlsx", sheet = "TGFB")
+ALTEJimportance <- read_excel("Input/Relative importance of BAlt genes.xlsx", sheet = "ALTEJ")
+##These files are the ones generated based on the results from the "inhouse HNSC dataset", and can also be found in "1. Inhouse-HNSC/Output".
+```
+
+
+
+# PART 2.A: SCORES CALCULATION - ORIGINAL BALT -----------------------------------------
+
+#1. Turn the dataframe with gene expression into a matrix.
+```{r message = FALSE, warning = FALSE, results='hide'}
+Exp2 <- as.matrix(Exp)
+class(Exp2) #matrix
+Exp2[1:10, 1:50] #Genes are columns and samples are rows. 
+```
+
+#2. Calculate the ssGSEA scores of the TGFB and ALTEJ signatures in each sample.
+```{r message = FALSE, warning = FALSE, results='hide'}
+Exp2<-t(Exp2) #Put genes as rows.
+Exp2[1:20, 1:10]
+ssgsea <- gsva(Exp2, Bothgenelists, method=c("ssgsea"))
+```
+
+#3. Traspose the matrix with the ssGSEA results and turn it into a dataframe.
+```{r message = FALSE, warning = FALSE, results='hide'}
+ssgsea <- t(ssgsea)
+ssgsea <- as.data.frame(ssgsea)
+names(ssgsea)
+ssgsea$TGFBUPgeneset_original_ssgsea <- ssgsea$TGFBUPgeneset 
+ssgsea$ALTEJgeneset_original_ssgsea <- ssgsea$ALTEJgeneset
+cor.test(ssgsea$TGFBUPgeneset_original_ssgsea, 
+         ssgsea$ALTEJgeneset_original_ssgsea, 
+         method = "pearson") #Test if TGFB and ALTEJ are anticorrelated: PCC= -0.126.
+```
+
+#4. Create a new variable that is the original Balt score.
+```{r message = FALSE, warning = FALSE}
+ssgsea$balt <- sqrt((max(ssgsea$ALTEJgeneset_original_ssgsea)-ssgsea$ALTEJgeneset_original_ssgsea)^2+
+                      (min(ssgsea$TGFBUPgeneset_original_ssgsea)-ssgsea$TGFBUPgeneset_original_ssgsea)^2) - 
+               sqrt((min(ssgsea$ALTEJgeneset_original_ssgsea)-ssgsea$ALTEJgeneset_original_ssgsea)^2+
+                      (max(ssgsea$TGFBUPgeneset_original_ssgsea)-ssgsea$TGFBUPgeneset_original_ssgsea)^2)
+ssgsea$balt <- ssgsea$balt * -1 
+ssgsea$balt_original_ssgsea <- ssgsea$balt
+```
+
+
+
+# PART 2.B: SCORES CALCULATION - WEIGHTED BALT -----------------------------------------
+
+#1. Create a matrix with only the expression of the TGFB and ALTEJ genes. 
+```{r message = FALSE, warning = FALSE, results='hide'}
+Exp2[1:20, 1:10]
+genes <- Exp2[which(rownames(Exp2) %in% TGFBlist | rownames(Exp2) %in% ALTEJlist), ]  
+dim(genes) #9,572 samples x 82 genes because 4 are missing.
+```
+
+#2. Edit gene names so that they match the ones from the genes' weight dataframe. 
+```{r message = FALSE, warning = FALSE, results='hide'}
+genes <- as.data.frame(genes)
+genes$Gene <- rownames(genes)
+genes$Gene <- ifelse(genes$Gene=="APEX2", "APE2", 
+                    ifelse(genes$Gene=="HRAS", "HRAS1",
+                    ifelse(genes$Gene=="PRPF19", "PRP19",
+                    ifelse(genes$Gene=="RAD51L3", "RAD51D",
+                    ifelse(genes$Gene=="KAT5", "TIP60",
+                    ifelse(genes$Gene=="ARHGAP32", "RICS",
+                    ifelse(genes$Gene=="C19orf40", "FAAP24",
+                    ifelse(genes$Gene=="CYTH1", "PSCD1",
+                    ifelse(genes$Gene=="NUDT1", "MTH1",
+                    ifelse(genes$Gene=="OBFC2B", "NABP2", 
+                    ifelse(genes$Gene=="STAG1", "TMEPAI", genes$Gene)))))))))))
+rownames(genes) <- genes$Gene
+genes[1:10, 1:10]
+```
+
+#3. Merge the genes and their weights in one dataframe. 
+```{r message = FALSE, warning = FALSE, results='hide'}
+genesimportance <- rbind(TGFBimportance[,c("Gene", "mean weight")], ALTEJimportance[,c("Gene", "mean weight")])
+genes2 <- merge(genesimportance, genes, 
+                by.x="Gene", by.y="Gene", 
+                all.x=TRUE, all.y=TRUE) #86 genes, but 4 missing information.
+genes2[1:86,1:10]  
+```
+
+#4. Calculate the TGFB and ALTEJ weighted scores in each sample, by multiplying each gene by its factor.
+```{r message = FALSE, warning = FALSE, results='hide'}
+##Factor = 1+weight if weight>0; or 1 if weight<0.
+genes2$factor <- ifelse(genes2$`mean weight`< 0, 1, genes2$`mean weight`)
+genes2$factor <- ifelse(genes2$factor==1, 1, 1+genes2$factor)
+rownames(genes2) <- genes2$Gene
+scores <- sapply(genes2[,-which(colnames(genes2) %in% c("Gene", "mean weight", "factor"))], '*', (genes2$factor))
+rownames(scores) <- rownames(genes2)
+scores <- as.data.frame(t(scores))
+scores$TGFBUPgeneset <- rowSums(scores[ , which(colnames(scores) %in% TGFBlist)], na.rm=TRUE)
+scores$ALTEJgeneset <- rowSums(scores[ , which(colnames(scores) %in% ALTEJlist)], na.rm=TRUE)
+scores <- scores[,c("TGFBUPgeneset", "ALTEJgeneset")]
+cor.test(scores$TGFBUPgeneset, 
+         scores$ALTEJgeneset, 
+         method = "pearson") #Test if TGFB and ALTEJ are anticorrelated: PCC= -0.04.
+```
+
+#5. Create a new variable that is the weighted Balt score.
+```{r message = FALSE, warning = FALSE}
+scores$balt <- sqrt((max(scores$ALTEJgeneset)-scores$ALTEJgeneset)^2+
+                      (min(scores$TGFBUPgeneset)-scores$TGFBUPgeneset)^2) - 
+               sqrt((min(scores$ALTEJgeneset)-scores$ALTEJgeneset)^2+
+                      (max(scores$TGFBUPgeneset)-scores$TGFBUPgeneset)^2)
+scores$balt <- scores$balt * -1 
+scores$balt_weighted <- scores$balt
+scores$TGFBUPgeneset_weighted <- scores$TGFBUPgeneset
+scores$ALTEJgeneset_weighted <- scores$ALTEJgeneset
+scores_weighted <- scores
+```
+
+#6. Put all the scores (original and weighted) in the same dataframe.
+```{r message = FALSE, warning = FALSE}
+scores_weighted$SampleID <- rownames(scores_weighted)
+ssgsea$SampleID <- rownames(ssgsea)
+scores <- merge(scores_weighted[,c("SampleID", "TGFBUPgeneset_weighted", "ALTEJgeneset_weighted", "balt_weighted")], 
+                ssgsea[,c("SampleID", "TGFBUPgeneset_original_ssgsea", "ALTEJgeneset_original_ssgsea", "balt_original_ssgsea")], 
+                by.x="SampleID", by.y="SampleID", 
+                all.x=TRUE, all.y=TRUE) #9.572p +9.572p-->9.572patients. Of those, all are in common.
+```
+
+#7. Export the dataset with the original and weighted scores. 
+```{r message = FALSE, warning = FALSE}
+write.xlsx(scores, file="Output/balt_scores_TCGApancancer.xlsx", col.names = TRUE, row.names = TRUE)
+```
+
+
+# PART 3: DATA WRANGLING -----------------------------------------
+
+#1. Remove recurrent and normal tissue samples. 
+```{r message = FALSE, warning = FALSE}
+scores$Sampletype <- scores$SampleID
+scores$Sampletype <- substr(scores$Sampletype, 13, 16) #Keep only sample type numbers.
+table(scores$Sampletype) #All 9.572 samples are from primary tumors.
+```
+
+#2. Add the clinical information to the scores dataframe. 
+```{r message = FALSE, warning = FALSE}
+scores$bcr_patient_barcode <- substring(scores$SampleID,1,12) 
+ALL <- merge(scores, Clin, 
+             by.x = "bcr_patient_barcode", by.y = "bcr_patient_barcode",
+             all.x=TRUE, all.y=FALSE) #9.572 + 11.248 --> 9.572 patients, of which 9.568 have clinical information available.
+```
+
+#3. Remove samples that are from hematologic tumors. 
+```{r message = FALSE, warning = FALSE, results='hide'}
+table(ALL$type)
+ALL <- ALL[-which(ALL$type == "DLBC" | ALL$type == "LAML"),] #9.572->9.525 patients.
+```
+
+#4. Check if some patients have more than one sample. 
+```{r message = FALSE, warning = FALSE}
+Duplicated <- ALL[duplicated(ALL$bcr_patient_barcode), ] #There are only 2 patients that have 2 samples. 
+```
+
+#5. Remove the PAAD samples that are mislabelled according to the article (doi: 10.1016/j.ccell.2017.07.007).
+```{r message = FALSE, warning = FALSE, results='hide'}
+List_of_TCGA_PAAD_150_correct_tumors <- read_excel("Input/List_of_TCGA-PAAD_150_correct_tumors.xlsx")
+PAADlist <- as.list(List_of_TCGA_PAAD_150_correct_tumors$`Table S1, related to Figure 1`) 
+ALL$sample <- substring(ALL$SampleID,1,16) #keep only characters 1-16
+ALL <- ALL[-which(ALL$type=="PAAD" & !ALL$sample %in% PAADlist),] #9.525-> 9.497 patients. 
+table(ALL$type)
+```
+
+#6. Remove the GBM neural samples, since it is now thought that these samples consist mostly of normal brain tissue.
+```{r message = FALSE, warning = FALSE, results='hide'}
+Subtype <- read.delim("Input/TCGA.GBM.sampleMap_GBM_clinicalMatrix.txt") #This file was downloaded from "UCSC Xena cancer browser" in April 2021.
+Neural <- Subtype[which(Subtype$GeneExp_Subtype=="Neural"),]
+Neural$sampleID <- as.character(Neural$sampleID)
+Neurallist <- as.list(Neural$sampleID)
+ALL$sample <- substring(ALL$SampleID,1,15) #keep only characters 1-15
+ALL <- ALL[-which(ALL$type=="GBM" & ALL$sample %in% Neurallist),] #9.497-> 9.472 patients.
+table(ALL$type)
+```
+
+#7. Prepare the survival variables so that they are in the appropriate format. 
+```{r message = FALSE, warning = FALSE, results='hide'}
+table(ALL$OS)
+class(ALL$OS.time) #[1] "numeric"
+ALL$OS.months <- ALL$OS.time/30.5
+table(ALL$PFI)
+class(ALL$PFI.time) #[1] "numeric"
+ALL$PFI.months <- ALL$PFI.time/30.5
+```
+
+#8. Group the tumor stages into fewer groups. 
+```{r message = FALSE, warning = FALSE, results='hide'}
+table(ALL$ajcc_pathologic_tumor_stage)
+ALL$stage <- ifelse(ALL$ajcc_pathologic_tumor_stage=="IS", "I-II",
+                  ifelse(ALL$ajcc_pathologic_tumor_stage=="Stage I", "I-II",
+                  ifelse(ALL$ajcc_pathologic_tumor_stage=="Stage IA", "I-II",
+                  ifelse(ALL$ajcc_pathologic_tumor_stage=="Stage IB", "I-II",
+                  ifelse(ALL$ajcc_pathologic_tumor_stage=="Stage II", "I-II",
+                  ifelse(ALL$ajcc_pathologic_tumor_stage=="Stage IIA", "I-II",
+                  ifelse(ALL$ajcc_pathologic_tumor_stage=="Stage IIB", "I-II",
+                  ifelse(ALL$ajcc_pathologic_tumor_stage=="Stage IIC", "I-II",
+                  ifelse(ALL$ajcc_pathologic_tumor_stage=="Stage III", "III-IV",
+                  ifelse(ALL$ajcc_pathologic_tumor_stage=="Stage IIIA", "III-IV",
+                  ifelse(ALL$ajcc_pathologic_tumor_stage=="Stage IIIB", "III-IV",
+                  ifelse(ALL$ajcc_pathologic_tumor_stage=="Stage IIIC", "III-IV",
+                  ifelse(ALL$ajcc_pathologic_tumor_stage=="Stage IV", "III-IV",
+                  ifelse(ALL$ajcc_pathologic_tumor_stage=="Stage IVA", "III-IV",
+                  ifelse(ALL$ajcc_pathologic_tumor_stage=="Stage IVB", "III-IV",
+                  ifelse(ALL$ajcc_pathologic_tumor_stage=="Stage IVC", "III-IV", NA))))))))))))))))
+table(ALL$stage)
+```
+
+#9. Prepare other variables. 
+```{r message = FALSE, warning = FALSE}
+ALL$age <- ALL$age_at_initial_pathologic_diagnosis
+```
+
+
+
+# PART 4: SELECT PATIENTS WHO RECEIVED GENOTOXIC TREATMENT -----------------------------------------
+
+#1. Explore what information is available.
+```{r message = FALSE, warning = FALSE, results='hide'}
+names(ALL)
+table(ALL$type)
+table(ALL$ajcc_pathologic_tumor_stage)
+table(ALL$clinical_stage)
+table(ALL$Radiation.Therapy)
+```
+
+#2. Create a dataframe of patients treated with RT.
+```{r message = FALSE, warning = FALSE}
+ALL_RT <- ALL[which(ALL$Radiation.Therapy == "Yes"),] #9.472-->2.416 patients.
+```
+
+#3. Create a dataframe of patients who, based on their cancer type and stage, their standard of care treatment includes RT and/or genotoxic ChT. 
+```{r message = FALSE, warning = FALSE}
+ALL_RTChT <- ALL[which(ALL$Radiation.Therapy == "Yes" |
+                         (ALL$type == "BLCA" & ALL$ajcc_pathologic_tumor_stage == "Stage IV") |
+                         (ALL$type == "CHOL" & ALL$ajcc_pathologic_tumor_stage == "Stage III" & ALL$ajcc_pathologic_tumor_stage == "Stage IV" & ALL$ajcc_pathologic_tumor_stage == "Stage IVA" & ALL$ajcc_pathologic_tumor_stage == "Stage IVB") |
+                         (ALL$type == "COAD" & !ALL$ajcc_pathologic_tumor_stage == "Stage I" & !ALL$ajcc_pathologic_tumor_stage == "Stage IA" ) |
+                         (ALL$type == "ESCA" & !ALL$ajcc_pathologic_tumor_stage == "Stage I" & !ALL$ajcc_pathologic_tumor_stage == "Stage IA" & !ALL$ajcc_pathologic_tumor_stage == "Stage IB" & !ALL$ajcc_pathologic_tumor_stage == "Stage IIA") |
+                         ALL$type == "GBM" |
+                         (ALL$type == "HNSC" & !ALL$ajcc_pathologic_tumor_stage == "Stage I" & !ALL$ajcc_pathologic_tumor_stage == "Stage IA" & !ALL$ajcc_pathologic_tumor_stage == "Stage IB" ) |
+                         (ALL$type == "LUAD" & !ALL$ajcc_pathologic_tumor_stage == "Stage I" & !ALL$ajcc_pathologic_tumor_stage == "Stage IA" & !ALL$ajcc_pathologic_tumor_stage == "Stage IB" ) |
+                         (ALL$type == "LUSC" & !ALL$ajcc_pathologic_tumor_stage == "Stage I" & !ALL$ajcc_pathologic_tumor_stage == "Stage IA" & !ALL$ajcc_pathologic_tumor_stage == "Stage IB" ) |
+                         ALL$type == "MESO" |
+                         (ALL$type == "OV" & !ALL$clinical_stage == "Stage IC") |
+                         ALL$type == "PAAD" |
+                         (ALL$type == "READ" & !ALL$ajcc_pathologic_tumor_stage == "Stage I" & !ALL$ajcc_pathologic_tumor_stage == "Stage IA" ) |
+                         (ALL$type == "STAD" & !ALL$ajcc_pathologic_tumor_stage == "Stage I" & !ALL$ajcc_pathologic_tumor_stage == "Stage IA" ) |  
+                         (ALL$type == "TGCT" & !ALL$ajcc_pathologic_tumor_stage == "IS" & !ALL$ajcc_pathologic_tumor_stage == "Stage I" & !ALL$ajcc_pathologic_tumor_stage == "Stage IA" & !ALL$ajcc_pathologic_tumor_stage == "Stage IB" )
+),] #9.472-->4.597 patients.
+```
+```{r message = FALSE, warning = FALSE}
+##Reasoning behind the inclusion criteria:
+  ##BLCA: Stage 4 usually includes genotoxic ChT with platin agents and earlier stages are frequently treated with surgery alone or followed by BCG or intracavitary non-genotoxic ChT. 
+  ##CHOL: Early stages can be treated with surgery alone (+/- RT +/- ChT). Locally advanced or metastatic are treated with ChT involving genotoxic platinum and gemcitabine. 
+  ##COAD: Stage I may be treated with surgery alone. In other stages ChT usually includes genotoxic Platin agents (FOLFOX/FOLFIRI). 
+  ##ESCA: Stages T1-2N0M0 (stages <IIB) may be treated with surgery alone. Otherwise RT, ChT or both are usually used. ChT usually includes genotoxic platin agents. 
+  ##GBM: Standard treatment is usually surgery + RT + ChT. ChT usually consists of genotoxic Temozolamide. 
+  ##HNSC: Stage I may be treated with surgery alone. Otherwise treatment usually includes RT, ChT or both (most frequently). ChT usually includes genotoxic platin agents (TPF for induction, CDDP in concomitance with RT, EXTREME in palliative cases).
+  ##LUAD and LUSC: Stage I may be treated with surgery alone. Otherwise treatment usually includes RT, ChT or both (most frequently). ChT usually includes genotoxic platin agents.
+  ##MESO: Treatment usually includes genotoxic platinum ChT +/- RT +/- surgery.
+  ##OV: Stage I may be treated with surgery alone and stage>I usually receive ChT. ChT usually includes genotoxic platin agents.
+  ##PAAD: Rarely treated with surgery alone. RT and/or ChT are frequently added. ChT most usually includes pirimidine analogues (such as gemcitabine, capecitabine or 5FU) or FOLFIRINOX.
+  ##READ: Stage I may be treated with surgery alone. Otherwise RT is given unless the tumor is metastatic and ChT, which usually includes genotoxic Platin agents (FOLFOX/FOLFIRI).
+  ##STAD: Stage IA may be treated with surgery alone. Otherwise RT, ChT or both are usually used. ChT usually includes genotoxic platin agents.
+  ##TGCT: Stage 1 can be treated with surgery only (+ RT in seminomas). In stage >1, treatment usually includes ChT (+ RT in seminomas). ChT usually includes genotoxic platin agents (BEP).  
+  ##BRCA: Usually treated with surgery + RT +/- HT +/- Trastuzumab +/- ChT. ChT frequently consists of anthracyclines and taxanes, so many times it does not include genotoxic drugs. 
+  ##CESC: Mainly treated with surgery + RT depending on the stage + ChT dependinng on the stage. ChT can be with platinum, but not necessarily, so not n isecessarily genotoxic.
+  ##KIRC: RT is rarely indicated. Many times treated with surgery alone and the systemic treatment, when given, rarely includes genotoxic drugs. 
+  ##LIHC: Many treated with surgery alone. Systemic treatment rarely includes genotoxic drugs, as the most frequent agent is sorafenib. 
+  ##PRAD: Usually treated with HT combined with surgery, RT or both. ChT is given only in some stage IV patients and many times it does not include genotoxic drugs, as it usually consists of taxane drugs. 
+  ##SKCM: Many treated with surgery alone. Systemic treatment rarely includes genotoxic drugs. 
+  ##THCA: Most of them are treated with surgery alone. Few exceptions are treated with both RT and ChT, such as anaplastic carcinomas. 
+  ##UCEC: Stage I may be treated with surgery alone. Otherwise RT is usually given. ChT is used mainly in stage IV and even so not always, as if possible HT is preferred.
+```
+
+
+
+# PART 5.A: SURVIVAL CURVES - ORIGINAL BALT -----------------------------------------
+
+#1. Select the dataset with patients treated with RT and/or genotoxic ChT. 
+```{r message = FALSE, warning = FALSE}
+X <- ALL_RTChT
+```
+
+#2. Create a new variable that is the original balt tertiles.
+```{r message = FALSE, warning = FALSE}
+X$tertile <- cut(X$balt_original_ssgsea, quantile(X$balt_original_ssgsea, c(0, 1/3, 2/3, 1), na.rm=TRUE), 
+                 na.rm=TRUE, include.lowest=TRUE, labels = c("Low", "Middle", "High"))
+X$Tertile <- ifelse(X$tertile == "Low", "high TGFβ and low ALTEJ", ifelse(X$tertile == "High", "low TGFβ and high ALTEJ", NA))
+X$Tertile <- as.character(X$Tertile)
+```
+
+#3. Plot and compare the overall survival curves between the original Balt score top and bottom tertiles.
+```{r message = FALSE, warning = FALSE}
+##Without the intermediate tertile.
+my.surv.object <- Surv(time=X$OS.months, event=X$OS)
+my.fit<-survfit(my.surv.object~X$Tertile)
+my.fit
+p<- ggsurvplot(my.fit, data=X, pval = TRUE, conf.int = TRUE, break.time.by = 12,
+               xlab="Time (months)", ylab="Surviving Fraction", xlim=c(0, 60),
+               legend.labs=c("low βalt", "high βalt"), legend.title=" ", 
+               font.main=15, palette=c("indianred1", "steelblue4"),
+               #surv.median.line = "hv",
+               risk.table = TRUE) 
+p$plot <- p$plot + labs(title="TCGA-pancancer", subtitle = "Patients treated with RT or genotoxic ChT (n=4,597)") + 
+  theme(plot.title=element_text(hjust = 0.5), plot.subtitle=element_text(hjust = 0.5))
+p1<-p;p1 #PDF 8x7
+```
+```{r message = FALSE, warning = FALSE}
+##With the intermediate tertile.
+my.surv.object <- Surv(time=X$OS.months, event=X$OS)
+my.fit<-survfit(my.surv.object~X$tertile)
+my.fit
+p<-ggsurvplot(my.fit, data=X, pval = TRUE, size = 1.5, censor.size=7, conf.int = FALSE, break.time.by = 12,
+              xlab="Time (months)", ylab="Surviving Fraction", , xlim=c(0, 60),
+              legend.labs=c("low βalt", "high βalt", "mid βalt"), legend.title=" ", 
+              font.main=15, palette=c("steelblue4", "indianred1", "goldenrod3"),
+              risk.table = TRUE)
+p$plot <- p$plot + labs(title="TCGA-pancancer", subtitle = "Patients treated with RT or genotoxic ChT (n=4,597)") + 
+  theme(plot.title=element_text(hjust = 0.5), plot.subtitle=element_text(hjust = 0.5))
+p1<-p;p1 #PDF 8x7
+```
+
+#4. Calculate the overall survival hazard ratio between the original Balt score top and bottom tertiles.
+```{r message = FALSE, warning = FALSE}
+my.surv.object <- Surv(time=X$OS.months, event=X$OS)
+cox<-coxph(my.surv.object ~  X$Tertile)
+summary(cox)
+```
+
+
+
+# PART 5.B: SURVIVAL CURVES - WEIGHTED BALT -----------------------------------------
+
+#1. Select the dataset with patients treated with RT and/or genotoxic ChT. 
+```{r message = FALSE, warning = FALSE}
+X <- ALL_RTChT
+```
+
+#2. Create a new variable that is the weighted balt tertiles. 
+```{r message = FALSE, warning = FALSE}
+X$tertile <- cut(X$balt_weighted, quantile(X$balt_weighted, c(0, 1/3, 2/3, 1), na.rm=TRUE), 
+                 na.rm=TRUE, include.lowest=TRUE, labels = c("Low", "Middle", "High"))
+X$Tertile <- ifelse(X$tertile == "Low", "high TGFβ and low ALTEJ", ifelse(X$tertile == "High", "low TGFβ and high ALTEJ", NA))
+X$Tertile <- as.character(X$Tertile)
+```
+
+#3. Plot and compare the overall survival curves between the weighted Balt score top and bottom tertiles.
+```{r message = FALSE, warning = FALSE}
+##Without the intermediate tertile.
+my.surv.object <- Surv(time=X$OS.months, event=X$OS)
+my.fit<-survfit(my.surv.object~X$Tertile)
+my.fit
+p<- ggsurvplot(my.fit, data=X, pval = TRUE, conf.int = TRUE, break.time.by = 12,
+               xlab="Time (months)", ylab="Surviving Fraction", xlim=c(0, 60),
+               legend.labs=c("low βalt", "high βalt"), legend.title=" ", 
+               font.main=15, palette=c("indianred1", "steelblue4"),
+               #surv.median.line = "hv",
+               risk.table = TRUE) 
+p$plot <- p$plot + labs(title="TCGA-pancancer", subtitle = "Patients treated with RT or genotoxic ChT (n=4,597)") + 
+  theme(plot.title=element_text(hjust = 0.5), plot.subtitle=element_text(hjust = 0.5))
+p1<-p;p1 #PDF 8x7
+```
+```{r message = FALSE, warning = FALSE}
+##With the intermediate tertile.
+my.surv.object <- Surv(time=X$OS.months, event=X$OS)
+my.fit<-survfit(my.surv.object~X$tertile)
+my.fit
+p<-ggsurvplot(my.fit, data=X, pval = TRUE, size = 1.5, censor.size=7, conf.int = FALSE, break.time.by = 12,
+              xlab="Time (months)", ylab="Surviving Fraction", , xlim=c(0, 60),
+              legend.labs=c("low βalt", "high βalt", "mid βalt"), legend.title=" ", 
+              font.main=15, palette=c("steelblue4", "indianred1", "goldenrod3"),
+              risk.table = TRUE)
+p$plot <- p$plot + labs(title="TCGA-pancancer", subtitle = "Patients treated with RT or genotoxic ChT (n=4,597)") + 
+  theme(plot.title=element_text(hjust = 0.5), plot.subtitle=element_text(hjust = 0.5))
+p1<-p;p1 #PDF 8x7
+```
+
+#4. Calculate the overall survival hazard ratio between the weighted Balt score top and bottom tertiles.
+```{r message = FALSE, warning = FALSE}
+my.surv.object <- Surv(time=X$OS.months, event=X$OS)
+cox<-coxph(my.surv.object ~  X$Tertile)
+summary(cox)
+```
+
+
+
+# PART 6: ORIGINAL VS WEIGHTED BALT COMPARISION WITH BOOTSTRAPING -----------------------------------------
+
+#1. Create a function to calculate the overall survival hazard ratio (HR) between tertile 1 and tertile 3.
+```{r message = FALSE, warning = FALSE, results='hide'}
+HR <-  function(dataset, i){
+  dataset2 <- dataset[i,]
+  OSmonths <- dataset2$OS.months
+  OSstatus <- dataset2$OS
+  my.surv.object <- Surv(time=OSmonths, event=OSstatus)
+  cox<-coxph(my.surv.object ~  Tertile, data=dataset2, na.action=na.omit)
+  return(exp(cbind(coef(cox),confint(cox))))
+  #return(coefficients(cox))
+}
+HR(X)
+```
+
+#2. Test the performance of the weighted Balt score with bootstrapping. 
+```{r message = FALSE, warning = FALSE, results='hide'}
+##Create a new variable that is the weighted balt tertiles. 
+X <- ALL_RTChT
+X$tertile <- cut(X$balt_weighted, quantile(X$balt_weighted, c(0, 1/3, 2/3, 1), na.rm=TRUE), 
+                 na.rm=TRUE, include.lowest=TRUE, labels = c("Low", "Middle", "High"))
+X$Tertile <- ifelse(X$tertile == "Low", "high TGFβ and low ALTEJ", ifelse(X$tertile == "High", "low TGFβ and high ALTEJ", NA))
+X$Tertile <- as.character(X$Tertile)
+##Check that the HR function works well. 
+HR(X)
+my.surv.object <- Surv(time=X$OS.months, event=X$OS)
+cox<-coxph(my.surv.object ~  Tertile, data=X, na.action=na.omit)
+summary(cox)
+##Create 500 different datasets with bootstraping and calculate the tertile 1 vs 3 HR in each of them.
+library("boot")
+set.seed(0)
+results <- boot(data=X, statistic=HR, R=500)
+plot(results, index=1) 
+##Create a dataset with the results. 
+summary(results)
+results$t0
+results$t
+hazardratios <- data.frame(HR=results$t)
+colnames(hazardratios) <- unlist(as.list(c("HR", "Low.CI", "High.CI")))
+hazardratios$set <- as.numeric(as.character(rownames(hazardratios)))
+hazardratios_balt_weighted <- hazardratios
+```
+
+#3. Test the performance of the original Balt score with bootstrapping. 
+```{r message = FALSE, warning = FALSE, results='hide'}
+##Create a new variable that is the original balt tertiles. 
+X <- ALL_RTChT
+X$tertile <- cut(X$balt_original_ssgsea, quantile(X$balt_original_ssgsea, c(0, 1/3, 2/3, 1), na.rm=TRUE), 
+                 na.rm=TRUE, include.lowest=TRUE, labels = c("Low", "Middle", "High"))
+X$Tertile <- ifelse(X$tertile == "Low", "high TGFβ and low ALTEJ", ifelse(X$tertile == "High", "low TGFβ and high ALTEJ", NA))
+X$Tertile <- as.character(X$Tertile)
+##Check that the HR function works well. 
+HR(X)
+my.surv.object <- Surv(time=X$OS.months, event=X$OS)
+cox<-coxph(my.surv.object ~  Tertile, data=X, na.action=na.omit)
+summary(cox)
+##Create 500 different datasets with bootstraping and calculate the tertile 1 vs 3 HR in each of them.
+library("boot")
+set.seed(0)
+results <- boot(data=X, statistic=HR, R=500)
+plot(results, index=1) 
+##Create a dataset with the results. 
+summary(results)
+results$t0
+results$t
+hazardratios <- data.frame(HR=results$t)
+colnames(hazardratios) <- unlist(as.list(c("HR", "Low.CI", "High.CI")))
+hazardratios$set <- as.numeric(as.character(rownames(hazardratios)))
+hazardratios_balt_original_ssgsea <- hazardratios
+```
+
+#4.Create forest plots showing the hazard ratios of the scores in the 500 bootstrapped datasets. 
+```{r message = FALSE, warning = FALSE}
+##Weighted Balt. 
+ggplot(hazardratios_balt_weighted, aes(x=set, y=HR, ymin=Low.CI, ymax=High.CI)) + 
+  geom_point(size=2.5, colour="darkgoldenrod2", stroke = 0.5,position=position_dodge(width = 0.7)) +
+  geom_errorbar(aes(ymin=Low.CI, ymax=High.CI),width=0.5,cex=0.3) +
+  geom_hline(yintercept=1, lty=2, col="darkgoldenrod2", cex=2) +
+  xlab("500 independent samplings")+ ylab("Hazard Ratio (95% CI)") +
+  scale_y_continuous(breaks = seq(0, 100, by = 0.25)) +
+  #scale_x_continuous(breaks = seq(-5, 105)) +
+  labs(title="Weighted βalt score", subtitle = "Top vs bottom tertiles") +
+  theme_minimal() + 
+  theme(text = element_text(size=15), axis.text.x=element_blank(), 
+        plot.title=element_text(hjust = 0.5), plot.subtitle=element_text(hjust = 0.5),
+        panel.border = element_rect(colour = "black", size=0.5, fill=NA)) #PDF 6x11.
+```
+```{r message = FALSE, warning = FALSE}
+##Original Balt. 
+ggplot(hazardratios_balt_original_ssgsea, aes(x=set, y=HR, ymin=Low.CI, ymax=High.CI)) + 
+  geom_point(size=2.5, colour="darkgoldenrod2", stroke = 0.5,position=position_dodge(width = 0.7)) +
+  geom_errorbar(aes(ymin=Low.CI, ymax=High.CI),width=0.5,cex=0.3) +
+  geom_hline(yintercept=1, lty=2, col="darkgoldenrod2", cex=2) +
+  xlab("500 independent samplings")+ ylab("Hazard Ratio (95% CI)") +
+  scale_y_continuous(breaks = seq(0, 100, by = 0.25)) +
+  #scale_x_continuous(breaks = seq(-5, 105)) +
+  labs(title="Original βalt score", subtitle = "Top vs bottom tertiles") +
+  theme_minimal() + 
+  theme(text = element_text(size=15), axis.text.x=element_blank(), 
+        plot.title=element_text(hjust = 0.5), plot.subtitle=element_text(hjust = 0.5),
+        panel.border = element_rect(colour = "black", size=0.5, fill=NA)) #PDF 6x11.
+```
+
+#5. Create a dataset with the hazard ratios of the original and the weighted Balt scores.
+```{r message = FALSE, warning = FALSE}
+hazardratios_balt_original_ssgsea$set <- "βalt original"
+hazardratios_balt_weighted$set <- "βalt weighted"
+hazardratios <- rbind(hazardratios_balt_original_ssgsea, hazardratios_balt_weighted)
+```
+
+#6. Test for statistical significance the differences on the hazard ratios of the original and the wegihted Balt scores.
+```{r message = FALSE, warning = FALSE}
+wilcox.test(HR ~ set, data=hazardratios) #Mann-Whitney test. 
+t.test(HR ~ set, data=hazardratios, paired = TRUE) #Paired T-test.
+```
+
+#7. Create violinplots comparing the hazard ratios of the original and the wegihted Balt scores.
+```{r message = FALSE, warning = FALSE, fig.show='hide'}
+p<-ggplot(data=hazardratios, aes(x=set, y=HR, fill=set)) + 
+  geom_violin() +
+  scale_fill_manual(values=c("grey50", "grey50")) +
+  labs(x = "Score", y = "Hazard Ratio\nTop vs bottom tertiles") +
+  geom_dotplot(binaxis='y', stackdir='center', dotsize=0.3, fill="black") +
+  theme(text = element_text(size=15)) + theme(legend.title=element_text(size=14)) +
+  theme(axis.text.x = element_text(angle = 0, size = 12)) +
+  rremove("legend"); p 
+```
+```{r message = FALSE, warning = FALSE}
+##Add p-values to the plot.
+library("ggpubr")
+my_comparisons <- list(c("βalt original", "βalt weighted"))
+p + stat_compare_means(method = "wilcox.test", comparisons = my_comparisons, 
+                       label = "p.format",  #p.signif or p.format
+                       bracket.size=0.5) + ylim(0.45, 0.81) #PDF 5x6.5.
+```
+
+#8. Calculate the mean hazard ratio of the original and the wegihted Balt scores. 
+```{r message = FALSE, warning = FALSE}
+tapply(hazardratios$HR, hazardratios$set, mean)
+```
+
+
+# PART 7: CHECK THE PROPORTIONAL HAZARDS ASSUMPTION -----------------------------------------
+
+#1.Create new variables that are the original and the weighted balt tertiles. 
+```{r message = FALSE, warning = FALSE}
+X <- ALL_RTChT
+X$tertile_original <- cut(X$balt_original_ssgsea, quantile(X$balt_original_ssgsea, c(0, 1/3, 2/3, 1), na.rm=TRUE), 
+                 na.rm=TRUE, include.lowest=TRUE, labels = c("Low", "Middle", "High"))
+X$Tertile_original <- ifelse(X$tertile_original == "Low", "high TGFβ and low ALTEJ", ifelse(X$tertile_original == "High", "low TGFβ and high ALTEJ", NA))
+X$Tertile_original <- as.character(X$Tertile_original)
+X$tertile_weighted <- cut(X$balt_weighted, quantile(X$balt_weighted, c(0, 1/3, 2/3, 1), na.rm=TRUE), 
+                          na.rm=TRUE, include.lowest=TRUE, labels = c("Low", "Middle", "High"))
+X$Tertile_weighted <- ifelse(X$tertile_weighted == "Low", "high TGFβ and low ALTEJ", ifelse(X$tertile_weighted == "High", "low TGFβ and high ALTEJ", NA))
+X$Tertile_weighted <- as.character(X$Tertile_weighted)
+```
+
+#2. Check the proportional hazards assumption for univariate Cox regressions of the weighted Balt score. 
+```{r message = FALSE, warning = FALSE, results='hide', fig.show='hide'}
+##As a categoric variable (tertiles 1 vs 3). 
+my.surv.object <- Surv(time=X$OS.months, event=X$OS)
+cox<-coxph(my.surv.object ~  X$Tertile_weighted)
+summary(cox)
+test.ph <- cox.zph(cox)
+test.ph
+ggcoxzph(test.ph)
+```
+```{r message = FALSE, warning = FALSE, results='hide', fig.show='hide'}
+##As a continuous variable. 
+cox<-coxph(my.surv.object ~  X$balt_weighted)
+summary(cox)
+test.ph <- cox.zph(cox)
+test.ph
+ggcoxzph(test.ph)
+```
+
+#3. Check the proportional hazards assumption for multivariate Cox regressions of the weighted Balt score.
+```{r message = FALSE, warning = FALSE}
+##As a categoric variable (tertiles 1 vs 3).
+cox<-coxph(my.surv.object ~  X$Tertile_weighted + X$age + X$stage)
+summary(cox)
+test.ph <- cox.zph(cox)
+test.ph
+ggcoxzph(test.ph)
+```
+```{r message = FALSE, warning = FALSE}
+##As a continuous variable. 
+cox<-coxph(my.surv.object ~  X$balt_weighted + X$age + X$stage)
+summary(cox)
+test.ph <- cox.zph(cox)
+test.ph
+ggcoxzph(test.ph)
+```
+
+#4. Check the proportional hazards assumption for univariate Cox regressions of the original Balt score. 
+```{r message = FALSE, warning = FALSE, results='hide', fig.show='hide'}
+##As a categoric variable (tertiles 1 vs 3). 
+my.surv.object <- Surv(time=X$OS.months, event=X$OS)
+cox<-coxph(my.surv.object ~  X$Tertile_original)
+summary(cox)
+test.ph <- cox.zph(cox)
+test.ph
+ggcoxzph(test.ph)
+```
+```{r message = FALSE, warning = FALSE, results='hide', fig.show='hide'}
+##As a continuous variable. 
+cox<-coxph(my.surv.object ~  X$balt_original_ssgsea)
+summary(cox)
+test.ph <- cox.zph(cox)
+test.ph
+ggcoxzph(test.ph)
+```
+
+#5. Check the proportional hazards assumption for multivariate Cox regressions of the original Balt score.
+```{r message = FALSE, warning = FALSE}
+##As a categoric variable (tertiles 1 vs 3).
+cox<-coxph(my.surv.object ~  X$Tertile_original + X$age + X$stage)
+summary(cox)
+test.ph <- cox.zph(cox)
+test.ph
+ggcoxzph(test.ph)
+```
+```{r message = FALSE, warning = FALSE}
+##As a continuous variable. 
+cox<-coxph(my.surv.object ~  X$balt_original_ssgsea + X$age + X$stage)
+summary(cox)
+test.ph <- cox.zph(cox)
+test.ph
+ggcoxzph(test.ph)
+```
+
+
+
+# PART 8: COX REGRESSIONS -----------------------------------------
+
+#1. Calculate the univariate Cox regressions of the weighted Balt score. 
+```{r message = FALSE, warning = FALSE}
+##As a categoric variable (tertiles 1 vs 3). 
+my.surv.object <- Surv(time=X$OS.months, event=X$OS)
+cox<-coxph(my.surv.object ~  X$Tertile_weighted)
+summary(cox)
+```
+```{r message = FALSE, warning = FALSE}
+##As a continuous variable. 
+cox<-coxph(my.surv.object ~  X$balt_weighted)
+summary(cox)
+```
+
+#2. Calculate the multivariate Cox regressions of the weighted Balt score. 
+```{r message = FALSE, warning = FALSE}
+##As a categoric variable (tertiles 1 vs 3).
+cox<-coxph(my.surv.object ~  X$Tertile_weighted + X$age + X$stage)
+summary(cox)
+```
+```{r message = FALSE, warning = FALSE}
+##As a continuous variable. 
+cox<-coxph(my.surv.object ~  X$balt_weighted + X$age + X$stage)
+summary(cox)
+```
+
+#3. Calculate the univariate Cox regressions of the original Balt score. 
+```{r message = FALSE, warning = FALSE}
+##As a categoric variable (tertiles 1 vs 3). 
+my.surv.object <- Surv(time=X$OS.months, event=X$OS)
+cox<-coxph(my.surv.object ~  X$Tertile_original)
+summary(cox)
+```
+```{r message = FALSE, warning = FALSE}
+##As a continuous variable. 
+cox<-coxph(my.surv.object ~  X$balt_original_ssgsea)
+summary(cox)
+```
+
+#4. Calculate the multivariate Cox regressions of the original Balt score.
+```{r message = FALSE, warning = FALSE}
+##As a categoric variable (tertiles 1 vs 3).
+cox<-coxph(my.surv.object ~  X$Tertile_original + X$age + X$stage)
+summary(cox)
+```
+```{r message = FALSE, warning = FALSE}
+##As a continuous variable.
+cox<-coxph(my.surv.object ~  X$balt_original_ssgsea + X$age + X$stage)
+summary(cox)
+```
+
+
+
+# PART 9: FOREST PLOTS BY CANCER TYPE -----------------------------------------
+
+#1. Scale the original and weighted Balt scores to the same range.
+```{r message = FALSE, warning = FALSE}
+X <- ALL_RTChT
+X$type <- as.character(X$type)
+library("scales")
+X$balt_weighted <- rescale(X$balt_weighted, to = c(0, 1))
+X$balt_original_ssgsea <- rescale(X$balt_original_ssgsea, to = c(0, 1))
+```
+
+#2. Remove cancer types that don't have enough events. 
+```{r message = FALSE, warning = FALSE, results='hide'}
+table(X$OS, X$type)
+X <- X[-which(X$type=="KIRC" | X$type=="KIRP" | X$type=="LIHC" | X$type=="PCPG" | X$type=="ACC" | 
+              X$type=="PRAD" | X$type=="SKCM" | X$type=="TGCT" | X$type=="THCA" | X$type=="THYM" |
+              X$type=="UCS"),] #Remove cancer types with <=10 events. 4.597->4.112 patients. 
+```
+
+#3. Calculate the Cox regression coefficients of the original and weighted Balt scores with survival in each cancer type.
+```{r message = FALSE, warning = FALSE, results='hide'}
+##Weighted Balt. 
+coxdf <- X %>% split(.$type) 
+coxdf <- coxdf %>%
+         purrr::map(~ survival::coxph(Surv(OS.time, OS) ~ balt_weighted, data = .) %>%  
+         broom::tidy(exponentiate = TRUE, conf.int = TRUE)) #Do a Cox regression for each cancer type separately.
+class(coxdf) #list of dataframes
+Unicox <- do.call(rbind, coxdf) #Extract elements from the nested list.
+Unicox$cancer <- rownames(Unicox)
+Unicox$estimate <- log(Unicox$estimate) #Calculate ln of estimate to have the Cox regression coefficient. Log means neperian logarithm in R (base e).
+Unicox$conf.low <- log(Unicox$conf.low)
+Unicox$conf.high <- log(Unicox$conf.high)
+Unicox$OSassociation <- ifelse(Unicox$estimate < 0, "Better OS", "Worse OS")
+Unicox_weighted <- Unicox
+```
+```{r message = FALSE, warning = FALSE, results='hide'}
+##Original Balt.
+coxdf <- X %>% split(.$type) 
+coxdf <- coxdf %>%
+         purrr::map(~ survival::coxph(Surv(OS.time, OS) ~ balt_original_ssgsea, data = .) %>%  
+         broom::tidy(exponentiate = TRUE, conf.int = TRUE)) #Do a Cox regression for each cancer type separately.
+class(coxdf) #list of dataframes
+Unicox <- do.call(rbind, coxdf) #Extract elements from the nested list.
+Unicox$cancer <- rownames(Unicox)
+Unicox$estimate <- log(Unicox$estimate) #Calculate ln of estimate to have the Cox regression coefficient. Log means neperian logarithm in R (base e).
+Unicox$conf.low <- log(Unicox$conf.low)
+Unicox$conf.high <- log(Unicox$conf.high)
+Unicox$OSassociation <- ifelse(Unicox$estimate < 0, "Better OS", "Worse OS")
+Unicox_original_ssgsea <- Unicox
+```
+
+#4. Put the results of both scores in the same dataframe. 
+```{r message = FALSE, warning = FALSE, results='hide'}
+Unicox <- rbind(Unicox_weighted, Unicox_original_ssgsea) 
+Unicox$βalt <- ifelse(Unicox$term=="balt_original_ssgsea", "Original βalt", 
+                      ifelse(Unicox$term=="balt_weighted", "Weighted βalt", NA))
+Unicox$estimate2 <- format(round(Unicox$estimate, 2), nsmall = 2)
+Unicox$conf.low2 <- format(round(Unicox$conf.low, 2), nsmall = 2)
+Unicox$conf.high2 <- format(round(Unicox$conf.high, 2), nsmall = 2)
+Unicox$conf <- paste(Unicox$conf.low2, Unicox$conf.high2, sep=",")
+Unicox$conf <- paste("[", Unicox$conf, sep="")
+Unicox$conf <- paste(Unicox$conf, "]", sep="")
+Unicox$text <- paste(Unicox$estimate2, Unicox$conf, sep=" ")
+Unicox$p.value2 <- format(round(Unicox$p.value, 2), nsmall = 2)
+Unicox$p.value2 <- ifelse(Unicox$p.value<0.05, paste(Unicox$p.value2, "*", sep=""), Unicox$p.value2)
+Unicox$text <- paste(Unicox$text, Unicox$p.value2, sep="      ")
+```
+
+#5. Create a forest plot of association of the original and the weighted BAlt scores with survival in each cancer type.
+```{r message = FALSE, warning = FALSE}
+ggplot(Unicox, aes(x=cancer, y=estimate, ymin=conf.low, ymax=conf.high,col=βalt, fill=βalt)) + 
+  geom_linerange(size=4,position=position_dodge(width = 0.7)) +
+  geom_hline(yintercept=0, lty=2) +
+  geom_point(size=3, shape=21, colour="white", stroke = 0.5,position=position_dodge(width = 0.7)) +
+  scale_fill_manual(values=c("bisque4", "#008fd5")) + #Dot colors.
+  scale_color_manual(values=c("bisque1", "lightskyblue")) + #Bar colors.
+  scale_x_discrete(name=" ") +
+  scale_y_continuous(name="Cox Regression Coefficient", limits = c(-8, 15)) +
+  coord_flip() +
+  theme_minimal() +
+  labs(title="Association of the βalt score with OS", subtitle = "Patients treated with RT and/or genotoxic ChT") +
+  theme(plot.title=element_text(hjust = 0.5), plot.subtitle=element_text(hjust = 0.5)) +
+  geom_text(aes(y=12, label=text),size=3, position=position_dodge(width=0.7), color="black") #+rremove("legend") 
+#PDF10x9.
+```
+
+
+
+
+
+
+
+
+
+
