@@ -1,0 +1,68 @@
+Study ID	Patient ID	Sample ID	Diagnosis Age	Cancer Type	Cancer Type Detailed	Category of Sample	Doubling Time (hrs)	Epithelial	Fraction Genome Altered	Tumor Other Histologic Subtype	MDR	Mutation Count	Oncotree Code	P53	Ploidy	Prior Treatment	Number of Samples Per Patient	Sample Type	Sex	Somatic Status
+cellline_nci60	786_0	786_0	58	Renal	Renal Cell Carcinoma	NA	22.4	Yes	NA	Adenocarcinoma	-44	239	RCC	MT	4n+/-, Near-tetraploid 92+/- (81-103)	None	1	NA	Male	Matched
+cellline_nci60	A498	A498	52	Renal	Renal Cell Carcinoma	NA	66.8	Yes	0.3279	Adenocarcinoma	78	171	RCC	WT	3n, Triploid (69)	NA	1	NA	Male	Matched
+cellline_nci60	A549	A549	58	Non-Small Cell Lung	Non-Small Cell Lung Cancer	NA	22.9	Yes	0.2719	Adenocarcinoma-p/md	10	217	NSCLC	WT	3n+/-, Near-triploid 69+/- (58-80)	NA	1	NA	Male	Matched
+cellline_nci60	ACHN	ACHN	22	Renal	Renal Cell Carcinoma	NA	27.5	Yes	0.3073	Renal cell carcinoma-p/md	120	117	RCC	WT	2n+/-, Near-diploid 46+/- (35-57)	Rad/VB/CCNU/Mto/Pred	1	NA	Male	Matched
+cellline_nci60	BT_549	BT_549	72	Breast	Invasive Breast Carcinoma	Metastasis	53.9	Yes	0.3550	Papillary infiltrating ductal carcinoma-mammary gland; breast	-45	175	BRCA	?	3n+/-, Near-triploid 69+/- (58-80)	NA	1	Metastasis	Female	Matched
+cellline_nci60	CAKI_1	CAKI_1	49	Renal	Renal Cell Carcinoma	Metastasis	39	Yes	0.3681	Clear cell carcinoma	171	146	RCC	WT	3n, Triploid (69)	Rad/HU/5FU/Mtx/Ctx	1	Metastasis	Male	Matched
+cellline_nci60	CCRF_CEM	CCRF_CEM	4	Myeloid Neoplasm	Myeloid Neoplasm	NA	26.7	No	0.0502	ALL	35	857	MNM	MT	2n+/-, Near-diploid 46+/- (35-57)	Rad/Mtx/Cyx	1	NA	Female	Matched
+cellline_nci60	COLO205	COLO205	70	Colon	Colorectal Adenocarcinoma	Ascites	23.8	Yes	0.2993	Adenocarcinoma	7	204	COADREAD	MT	3n, Triploid (69)	NA	1	NA	Male	Matched
+cellline_nci60	CSF_268	CSF_268	NA	Other	Cancer of Unknown Primary	NA	NA	NA	0.1316	NA	NA	NA	CUP	NA	NA	NA	1	NA	NA	NA
+cellline_nci60	CSF_295	CSF_295	NA	Other	Cancer of Unknown Primary	NA	NA	NA	0.1839	NA	NA	NA	CUP	NA	NA	NA	1	NA	NA	NA
+cellline_nci60	CSF_539	CSF_539	NA	Other	Cancer of Unknown Primary	NA	NA	NA	0.2546	NA	NA	NA	CUP	NA	NA	NA	1	NA	NA	NA
+cellline_nci60	CSNB_19	CSNB_19	NA	Other	Cancer of Unknown Primary	NA	NA	NA	0.1399	NA	NA	NA	CUP	NA	NA	NA	1	NA	NA	NA
+cellline_nci60	CSNB_75	CSNB_75	NA	Other	Cancer of Unknown Primary	NA	NA	NA	0.3602	NA	NA	NA	CUP	NA	NA	NA	1	NA	NA	NA
+cellline_nci60	CU251	CU251	NA	Other	Cancer of Unknown Primary	NA	NA	NA	0.1926	NA	NA	NA	CUP	NA	NA	NA	1	NA	NA	NA
+cellline_nci60	DU_145	DU_145	69	Prostate	Prostate	Metastasis	32.3	Yes	0.2989	prostate; metastatic site: brain; carcinoma (patient with metastatic carcinoma of the prostate and a 3 year history of lymphocytic leukemia.)	4	1373	PROSTATE	?	3n+/-, Near-triploid 69+/- (58-80)	Androgen independent and unresposive to hormone therapy	1	Metastasis	Male	Matched
+cellline_nci60	EKVX	EKVX	NA	Non-Small Cell Lung	Non-Small Cell Lung Cancer	NA	43.6	Yes	0.3511	Adenocarcinoma-md	-9	380	NSCLC	MT	3n+/-, Near-triploid 69+/- (58-80)	NA	1	NA	Male	Matched
+cellline_nci60	HCC_2998	HCC_2998	NA	Colon	Colorectal Adenocarcinoma	NA	31.5	Yes	0.0117	carcinoma	-5	5551	COADREAD	MT	2n+/-, Near-diploid 46+/- (35-57)	NA	1	NA	NA	Matched
+cellline_nci60	HCT_116	HCT_116	NA	Colon	Colorectal Adenocarcinoma	NA	17.4	Yes	0.1294	carcinoma-vpd	26	1786	COADREAD	?	2n-, Hypodiploid (35-45)	NA	1	NA	Male	Matched
+cellline_nci60	HCT_15	HCT_15	NA	Colon	Colorectal Adenocarcinoma	NA	20.6	Yes	0.0789	Adenocarcinoma p/md	414	5094	COADREAD	?	2n+/-, Near-diploid 46+/- (35-57)	None	1	NA	NA	Matched
+cellline_nci60	HL_60	HL_60	36	Myeloid Neoplasm	Myeloid Neoplasm	PBL	28.6	No	0.2614	Pro myelocytic leukemia	-11	142	MNM	MT	2n+/-, Near-diploid 46+/- (35-57)	None	1	NA	Female	Matched
+cellline_nci60	HOP_62	HOP_62	60	Non-Small Cell Lung	Non-Small Cell Lung Cancer	NA	39	Yes	0.3135	adenocarcinoma-ud	61	453	NSCLC	MT	4n+, Hypertetraploid (93-103)	None	1	NA	Female	Matched
+cellline_nci60	HOP_92	HOP_92	62	Non-Small Cell Lung	Non-Small Cell Lung Cancer	NA	79.5	Yes	0.3602	Large cell-ud	-4	301	NSCLC	MT	4n+/-, Near-tetraploid 92+/- (81-103)	None	1	NA	Male	Matched
+cellline_nci60	HS578T	HS578T	74	Breast	Invasive Breast Carcinoma	Primary	53.8	Yes	0.2795	Carcinosarcoma-mammary gland; breast	NA	360	BRCA	MT	2n+, Hyperdiploid (47-57)	NA	1	Primary	Female	Matched
+cellline_nci60	HT29	HT29	44	Colon	Colorectal Adenocarcinoma	Primary	19.5	Yes	0.2462	Adenocarcinoma-md	15	345	COADREAD	MT	3n+/-, Near-triploid 69+/- (58-80)	None	1	Primary	Female	Matched
+cellline_nci60	IGROV1	IGROV1	47	Ovarian	Ovary/Fallopian Tube	NA	31	Yes	0.0526	Cystoadenocarcinoma-pd	20	678	OVARY	MT	4n+/-, Near-tetraploid 92+/- (81-103)	Rad	1	NA	Female	Matched
+cellline_nci60	KM12	KM12	NA	Colon	Colorectal Adenocarcinoma	NA	23.7	Yes	0.1644	Adenocarcinome-pd	-19	1961	COADREAD	MT	2n+/-, Near-diploid 46+/- (35-57)	None	1	NA	NA	Matched
+cellline_nci60	K_562	K_562	53	Myeloid Neoplasm	Myeloid Neoplasm	Pleural effusion	19.6	No	0.4209	CML	-1	314	MNM	MT	3n-, Hypotriploid (58-68)	Bisulfan/PiBr	1	NA	Female	Matched
+cellline_nci60	LOXIMVI	LOXIMVI	58	Melanoma	Melanoma	NA	20.5	No	0.1862	Malignant amelanotic melanoma	12	374	MEL	WT	3n+/-, Near-triploid 69+/- (58-80)	None	1	NA	Male	Matched
+cellline_nci60	M14	M14	NA	Melanoma	Melanoma	NA	26.3	No	0.3637	Melanotic melanoma	14	341	MEL	MT	3n+/-, Near-triploid 69+/- (58-80)	NA	1	NA	NA	Matched
+cellline_nci60	MALME_3M	MALME_3M	43	Melanoma	Melanoma	Metastasis	46.2	No	0.2589	Malignant melanotic melanoma	22	225	MEL	WT	4n+/-, Near-tetraploid 92+/- (81-103)	None	1	Metastasis	Male	Matched
+cellline_nci60	MCF7	MCF7	69	Breast	Invasive Breast Carcinoma	Pleural effusion	25.4	Yes	0.4732	Adenocarcinoma- mammary gland; breast; metastatic site: pleural effusion;	14	474	BRCA	WT	3n-, Hypotriploid (58-68)	NA	1	NA	Female	Matched
+cellline_nci60	MDA_MB_231	MDA_MB_231	51	Breast	Invasive Breast Carcinoma	Pleural effusion	41.9	Yes	0.3208	Adenocarcinoma-mammary gland; breast; epithelial; metastatic site: pleural effusion;	29	259	BRCA	MT	2n+, Hyperdiploid (47-57)	NA	1	NA	Female	Matched
+cellline_nci60	MDA_MB_435	MDA_MB_435	31	Melanoma	Melanoma	Pleural effusion	25.8	No	0.1742	Ductal carcinoma- mammary gland; breast; duct; metastatic site: pleural effusion;	20	467	MEL	MT	2n+, Hyperdiploid (47-57)	NA	1	NA	Female	Matched
+cellline_nci60	MDA_N	MDA_N	31	Melanoma	Melanoma	Pleural effusion	22.5	No	0.1931	Ductal carcinoma- mammary gland; breast; duct; metastatic site: pleural effusion;	12	436	MEL	MT	NA	NA	1	NA	Female	Matched
+cellline_nci60	MOLT_4	MOLT_4	19	Myeloid Neoplasm	Myeloid Neoplasm	PB	27.9	No	0.1360	ALL (cells were taken when patient was in relapse)	10	2449	MNM	WT	4n, Tetraploid (92)	VB/6MP/Pred	1	NA	Male	Matched
+cellline_nci60	NCI_ADR_RES	NCI_ADR_RES	NA	Ovarian	Ovary/Fallopian Tube	NA	34	Yes	0.3612	Adenocarinoma	352	237	OVARY	MT	2n+/-, Near-diploid 46+/- (35-57)	NA	1	NA	Female	Matched
+cellline_nci60	NCI_H226	NCI_H226	NA	Non-Small Cell Lung	Non-Small Cell Lung Cancer	NA	61	Yes	0.1949	Squamous cell carcinoma-vpd	7	119	NSCLC	MT	3n, Triploid (69)	None (non smoker)	1	NA	Male	Matched
+cellline_nci60	NCI_H23	NCI_H23	NA	Non-Small Cell Lung	Non-Small Cell Lung Cancer	NA	33.4	Yes	0.2982	Adenocarcinoma-ud	-2	642	NSCLC	MT	2n+, Hyperdiploid (47-57)	None	1	NA	Male	Matched
+cellline_nci60	NCI_H322M	NCI_H322M	52	Non-Small Cell Lung	Non-Small Cell Lung Cancer	NA	35.3	Yes	0.4146	Small cell Bronchioalveolar Carcinoma	-10	399	NSCLC	MT	2n+/-, Near-diploid 46+/- (35-57)	None	1	NA	Male	Matched
+cellline_nci60	NCI_H460	NCI_H460	NA	Non-Small Cell Lung	Non-Small Cell Lung Cancer	Pleural effusion	17.8	Yes	0.1406	Large Cell Carcinoma-ud	25	296	NSCLC	WT	2n+/-, Near-diploid 46+/- (35-57)	NA	1	NA	Male	Matched
+cellline_nci60	NCI_H522	NCI_H522	NA	Non-Small Cell Lung	Non-Small Cell Lung Cancer	NA	38.2	Yes	0.2119	Adenocarcinoma-vpd	16	221	NSCLC	MT	2n+/-, Near-diploid 46+/- (35-57)	None	1	NA	Male	Matched
+cellline_nci60	OVCAR_3	OVCAR_3	60	Ovarian	Ovary/Fallopian Tube	Ascites	34.7	Yes	0.3086	Adenocarcinoma-md	-12	185	OVARY	MT	3n+/-, Near-triploid 69+/- (58-80)	CyPh/CsPt/Adr	1	NA	Female	Matched
+cellline_nci60	OVCAR_4	OVCAR_4	42	Ovarian	Ovary/Fallopian Tube	NA	41.4	Yes	0.6018	Adenocarcinoma-md	-4	198	OVARY	WT	3n+/-, Near-triploid 69+/- (58-80)	CyPh/CsPt/Adr	1	NA	Female	Matched
+cellline_nci60	OVCAR_5	OVCAR_5	67	Ovarian	Ovary/Fallopian Tube	NA	48.8	Yes	0.2599	Adenocarcinoma-wd	13	162	OVARY	MT	2n+, Hyperdiploid (47-57)	None	1	NA	Female	Matched
+cellline_nci60	OVCAR_8	OVCAR_8	64	Ovarian	Ovary/Fallopian Tube	NA	26.1	Yes	0.2902	Carcinoma-ud	7	200	OVARY	MT	2n+, Hyperdiploid (47-57)	Ctx/Adr/CsPt/CyPh	1	NA	Female	Matched
+cellline_nci60	PC_3	PC_3	62	Prostate	Prostate	NA	27.1	Yes	0.2716	Adenocarcinoma- prostate; metastatic site: bone;	11	154	PROSTATE	MT	4n, Tetraploid (92)	NA	1	NA	Male	Matched
+cellline_nci60	RPMI_8226	RPMI_8226	61	Myeloid Neoplasm	Myeloid Neoplasm	PB	33.5	No	0.5649	Myeloma	-3	341	MNM	WT	3n-, Hypotriploid (58-68)	None	1	NA	Male	Matched
+cellline_nci60	RXF_393	RXF_393	54	Renal	Renal Cell Carcinoma	NA	62.9	Yes	0.4659	hypernephroma-pd	42	190	RCC	MT	3n+/-, Near-triploid 69+/- (58-80)	None	1	NA	Male	Matched
+cellline_nci60	SF_268	SF_268	24	CNS	CNS/Brain	NA	33.1	No	NA	"Glioblastoma, ud"	-38	188	BRAIN	MT	2n+, Hyperdiploid (47-57)	Rad	1	NA	Female	Matched
+cellline_nci60	SF_295	SF_295	67	CNS	CNS/Brain	NA	29.5	No	NA	"Glioblastoma, ud"	91	138	BRAIN	MT	5n+/-, Near-pentaploid 115+/- (104-126)	Rad	1	NA	Female	Matched
+cellline_nci60	SF_539	SF_539	34	CNS	CNS/Brain	NA	35.4	No	NA	Glial cell neoplasm	-40	156	BRAIN	WT	4n+/-, Near-tetraploid 92+/- (81-103)	Rad/BCNU/5FU/HU/6MP	1	NA	Female	Matched
+cellline_nci60	SK_MEL_2	SK_MEL_2	60	Melanoma	Melanoma	Metastasis	45.5	No	0.2230	Malignant melanotic melanoma	14	500	MEL	WT	4n-, Hypotetraploid (81-91)	None	1	Metastasis	Male	Matched
+cellline_nci60	SK_MEL_28	SK_MEL_28	51	Melanoma	Melanoma	NA	35.1	No	0.3626	Malignant melanotic melanoma	11	275	MEL	MT	4n-, Hypotetraploid (81-91)	None	1	NA	Male	Matched
+cellline_nci60	SK_MEL_5	SK_MEL_5	24	Melanoma	Melanoma	Metastasis	25.2	No	0.2609	Malignant melanotic melanoma	12	325	MEL	WT	4n+, Hypertetraploid (93-103)	None	1	Metastasis	Female	Matched
+cellline_nci60	SK_OV_3	SK_OV_3	64	Ovarian	Ovary/Fallopian Tube	Ascites	48.7	Yes	0.1290	Adenocarcinoma-vpd	15	275	OVARY	?	4n+/-, Near-tetraploid 92+/- (81-103)	Thiotepa	1	NA	Female	Matched
+cellline_nci60	SN12C	SN12C	43	Renal	Renal Cell Carcinoma	NA	29.5	Yes	0.4149	Renal cell carcinoma-pd	-86	450	RCC	MT	3n, Triploid (69)	None	1	NA	Male	Matched
+cellline_nci60	SNB_19	SNB_19	47	CNS	CNS/Brain	NA	34.6	No	NA	"Glioblastoma, ud"	-41	136	BRAIN	MT	3n+/-, Near-triploid 69+/- (58-80)	None	1	NA	Male	Matched
+cellline_nci60	SNB_75	SNB_75	NA	CNS	CNS/Brain	NA	62.8	No	NA	Astrocytoma	-38	155	BRAIN	MT	2n+, Hyperdiploid (47-57)	None	1	NA	Female	Matched
+cellline_nci60	SR	SR	11	Myeloid Neoplasm	Myeloid Neoplasm	NA	28.7	No	0.1630	Lymphoma	4	140	MNM	?	2n+/-, Near-diploid 46+/- (35-57)	Y	1	NA	Male	Matched
+cellline_nci60	SW_620	SW_620	51	Colon	Colorectal Adenocarcinoma	NA	20.4	Yes	0.1357	Carcinoma-ud	31	296	COADREAD	MT	2n+/-, Near-diploid 46+/- (35-57)	NA	1	NA	Male	Matched
+cellline_nci60	T47D	T47D	54	Breast	Invasive Breast Carcinoma	NA	45.5	Yes	0.7609	infiltrating ductal carcinoma	19	236	BRCA	MT	2n+, Hyperdiploid (47-57)	NA	1	NA	Female	Matched
+cellline_nci60	TK_10	TK_10	43	Renal	Renal Cell Carcinoma	NA	51.3	Yes	0.3015	Renal Spindle cell carcinoma	-4	264	RCC	MT	4n, Tetraploid (92)	None	1	NA	Male	Matched
+cellline_nci60	U251	U251	75	CNS	CNS/Brain	NA	23.8	No	NA	"Glioblastoma,ud"	-19	363	BRAIN	MT	2n+, Hyperdiploid (47-57)	NA	1	NA	Male	Matched
+cellline_nci60	UACC_257	UACC_257	NA	Melanoma	Melanoma	NA	38.5	No	0.3970	Melanotic melanoma	26	277	MEL	WT	3n+, Hypertriploid (70-80)	NA	1	NA	NA	Matched
+cellline_nci60	UACC_62	UACC_62	NA	Melanoma	Melanoma	NA	31.3	No	0.2405	Melanotic melanoma	8	458	MEL	WT	3n+/-, Near-triploid 69+/- (58-80)	NA	1	NA	NA	Matched
+cellline_nci60	UO_31	UO_31	NA	Renal	Renal Cell Carcinoma	NA	41.7	Yes	0.0681	Renal cell carcinoma-vpd	59	198	RCC	WT	2n+/-, Near-diploid 46+/- (35-57)	None	1	NA	Female	Matched
+cellline_nci60	X786_0	X786_0	NA	Other	Cancer of Unknown Primary	NA	NA	NA	0.2172	NA	NA	NA	CUP	NA	NA	NA	1	NA	NA	NA
