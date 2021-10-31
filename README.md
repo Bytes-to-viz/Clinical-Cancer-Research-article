@@ -4,8 +4,7 @@ This repository is part of a pre-publication release containing all the code use
 
 These analyses report a functional relationship between TGFβ signaling and DNA damage repair that can be used to predict the response of cancer patients to genotoxic treatment. 
 
-The gene signatures used in here were reported in our recent Science Translational Medicine publication from earlier this year (link: https://stm.sciencemag.org/content/13/580/eabc4465). Here we report their biological validation in primary head and neck squamous carcinoma specimens, which is a
-rarely attempted accomplishment for biostatical-based predictive signatures, to demonstrate that the signatures accurately report biological processes. Next, we used functional readouts to weight each signature gene by its association with biological responses to define a modified score -- termed βaltw-- that was retested for association with response to genotoxic therapies in independent datasets.
+The gene signatures used in here were reported in our recent Science Translational Medicine publication from earlier this year (link: https://stm.sciencemag.org/content/13/580/eabc4465). Here we report their biological validation in primary head and neck squamous carcinoma specimens, to demonstrate that the signatures accurately report biological processes. Next, we used functional readouts to weight each signature gene by its association with biological responses to define a modified score -- termed βaltw-- that was retested for association with response to genotoxic therapies in independent datasets.
 
 Each folder (Inhouse-HNSC, Inhouse-OV, TCGA-pancancer, TCGA-HNSC, GSE41613-HNSC, etc.) contains the code that was used to analyze each dataset. Among many others, some of the analytical processes that can be found in here are: 
 1. Analysis of the association between the expression of multiple genes and biological readouts of TGFβ activity and DNA damage repair proficiency. 
