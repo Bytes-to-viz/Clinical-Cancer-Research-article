@@ -1,6 +1,6 @@
-# Under-review-article
+# Clinical-Cancer-Research-article
 
-This repository is part of a pre-publication release containing all the code used in the analyses from the project called "Validation of TGFβ signaling and alternative end‐joining DNA repair signatures that predict response to genotoxic cancer therapy". The results are currently under review for publication. 
+This repository contains all the code used in the analyses from the project called "Validation of TGFβ signaling and alternative end‐joining DNA repair signatures that predict response to genotoxic cancer therapy", published in Clinical Cancer Research in January 2022.  
 
 These analyses report a functional relationship between TGFβ signaling and DNA damage repair that can be used to predict the response of cancer patients to genotoxic treatment. 
 
